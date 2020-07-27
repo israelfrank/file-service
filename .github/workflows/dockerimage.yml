@@ -8,33 +8,24 @@ on:
 
 jobs:
 
-  mongo:
-
-    runs-on: ubuntu-latest
-
-    name: Run mongo
-    
-    steps:
-
-      - name: Create mongo Docker container
-        id: build_mongo_docker
-        uses: DigiPie/mongo-action@v1.0.0
-        with:
-          image-version: latest
-          port: 27017
-      
-      - name: Install mongodb-clients
-        id: install_mongodb_clients
-        run: sudo apt install mongodb-clients
-
   test:
-    needs: mongo
 
     runs-on: ubuntu-latest
 
     steps:
     - name: scm checkout
       uses: actions/checkout@v1
+
+    - name: Create mongo Docker container
+      id: build_mongo_docker
+      uses: DigiPie/mongo-action@v1.0.0
+      with:
+        image-version: latest
+        port: 27017
+      
+    - name: Install mongodb-clients
+      id: install_mongodb_clients
+      run: sudo apt install mongodb-clients
         
     - name: Build the test image and run it
       run: docker build . --file test.Dockerfile --tag ${{ secrets.acr_registry }}$GITHUB_REPOSITORY:test
