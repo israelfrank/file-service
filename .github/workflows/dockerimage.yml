@@ -8,22 +8,22 @@ on:
 
 jobs:
 
-  test:
-    runs-on: ubuntu-latest
+  # test:
+  #   runs-on: ubuntu-latest
 
-    steps:
-    - name: scm checkout
-      uses: actions/checkout@v1
+  #   steps:
+  #   - name: scm checkout
+  #     uses: actions/checkout@v1
         
-    - name: Build the test image and run it
-      run: docker build --pull --rm -f "test.Dockerfile" - ${{ secrets.acr_registry }}$GITHUB_REPOSITORY:test "."
+  #   - name: Build the test image and run it
+  #     run: docker build --pull --rm -f "test.Dockerfile" - ${{ secrets.acr_registry }}$GITHUB_REPOSITORY:test "."
 
-    - name: Run test
-      run: docker run ${{ secrets.acr_registry }}$GITHUB_REPOSITORY:test 
+  #   - name: Run test
+  #     run: docker run ${{ secrets.acr_registry }}$GITHUB_REPOSITORY:test 
 
       
   image:
-    needs: test
+    # needs: test
 
     runs-on: ubuntu-latest
     
