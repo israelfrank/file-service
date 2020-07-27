@@ -8,13 +8,29 @@ on:
 
 jobs:
 
-  test:
-    
+  mongo:
+
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        mongodb-version: [4.0]
+    name: Run mongo
+    
+    steps:
+
+      - name: Create mongo Docker container
+        id: build_mongo_docker
+        uses: DigiPie/mongo-action@v1.0.0
+        with:
+          image-version: latest
+          port: 27017
+      
+      - name: Install mongodb-clients
+        id: install_mongodb_clients
+        run: sudo apt install mongodb-clients
+
+  test:
+    needs: mongo
+
+    runs-on: ubuntu-latest
 
     steps:
     - name: scm checkout
@@ -22,12 +38,6 @@ jobs:
         
     - name: Build the test image and run it
       run: docker build . --file test.Dockerfile --tag ${{ secrets.acr_registry }}$GITHUB_REPOSITORY:test
-
-    - name: Start MongoDB
-      uses: supercharge/mongodb-github-action@1.3.0
-      with:
-        mongodb-version: ${{ matrix.mongodb-version }}
-        mongodb-port: 27017
 
     - name: Run test
       run: docker run ${{ secrets.acr_registry }}$GITHUB_REPOSITORY:test 
