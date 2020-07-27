@@ -12,6 +12,10 @@ jobs:
     
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        mongodb-version: [4.0, 4.2]
+
     steps:
     - name: scm checkout
       uses: actions/checkout@v1
@@ -19,11 +23,11 @@ jobs:
     - name: Build the test image and run it
       run: docker build . --file test.Dockerfile --tag ${{ secrets.acr_registry }}$GITHUB_REPOSITORY:test
 
-    - name: pull mongo
-      run: docker pull mongo
-
-    - name: run mongo
-      run: docker run mongo
+    - name: Start MongoDB
+      uses: supercharge/mongodb-github-action@1.3.0
+      with:
+        mongodb-version: ${{ matrix.mongodb-version }}
+        # mongodb-replica-set: insert-replica-set-name
 
     - name: Run test
       run: docker run ${{ secrets.acr_registry }}$GITHUB_REPOSITORY:test 
