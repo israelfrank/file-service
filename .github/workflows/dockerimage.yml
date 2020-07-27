@@ -19,6 +19,12 @@ jobs:
     - name: Build the test image and run it
       run: docker build . --file test.Dockerfile --tag ${{ secrets.acr_registry }}$GITHUB_REPOSITORY:test
 
+    - name: pull mongo
+      run: docker pull mongo
+
+    - name: run mongo
+      run: docker run mongo
+
     - name: Run test
       run: docker run ${{ secrets.acr_registry }}$GITHUB_REPOSITORY:test 
 
