@@ -11,7 +11,7 @@ pipeline {
       spec: 
           containers: 
             - name: dind-slave
-              image:  nodefactory/dind-with-compose
+              image:  burakince/dind-compose
               resources: 
                   requests: 
                       cpu: 20m 
