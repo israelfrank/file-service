@@ -1,6 +1,6 @@
 //file services
 pipeline {
-  agent none
+  agent any
     stages {
       stage('get_commit_msg') {
         steps {
