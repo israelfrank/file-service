@@ -6,20 +6,18 @@ services:
     ports:
       - 27017:27017
     volumes:
-      - db-data:/data/db
-      - mongo-config:/data/configdb
+      - ./data/db:/data/db
 
   file_service_test:
     build:
         context: .
         dockerfile: test.Dockerfile
     environment:
-      MONGO_HOST: 'mongo'
+      MONGO_HOST: 'mongodb://mongo:27017/devDB'
     depends_on:
       - mongo
 
 volumes:
-  db-data:
-  mongo-config:
+  mongodb_data_container:
  
 
