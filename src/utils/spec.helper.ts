@@ -15,7 +15,7 @@ before(async () => {
   const mongoHost = process.env.MONGO_HOST || database.host;
   await mongoose.connect(
     `mongodb://${mongoHost}:27017/file`,
-    { useCreateIndex: true, useNewUrlParser: true, useFindAndModify: false }
+    { useCreateIndex: true, useNewUrlParser: true, useFindAndModify: true }
   );
   console.log(`mongo connection: mongodb://${mongoHost}:27017/file`);
 });
