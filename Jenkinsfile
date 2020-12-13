@@ -55,7 +55,8 @@ pipeline {
       stage('build dockerfile of tests') {
           steps {
             //sh 'docker-compose -f "docker-compose.test.yml" up --build'
-            sh 'docker-compose -f docker-compose.test.yml up --build'
+            sh 'sleep 15m'
+            sh 'docker-compose -f docker-compose.test.yml up --exit-code-from file_service_test'
           }
         //   post {
         //     always {
