@@ -55,7 +55,7 @@ pipeline {
       stage('build dockerfile of tests') {
           steps {
             //sh 'docker-compose -f "docker-compose.test.yml" up --build'
-            sh 'docker-compose -f docker-compose.test.yml up --build --force-recreate --renew-anon-volumes --exit-code-from file_service_test'
+            sh 'docker-compose -f docker-compose.test.yml up --exit-code-from file_service_test'
           }
         //   post {
         //     always {
