@@ -1,12 +1,10 @@
 version: '3.3'
 services:
 
-  mongo:
+  mongodb:
     image: mongo:latest
     environment:
-      MONGO_HOST: 'mongo'
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
+      MONGO_HOST: 'mongodb'
     ports:
       - 27017:27017
     volumes:
@@ -17,11 +15,9 @@ services:
         context: .
         dockerfile: test.Dockerfile
     environment:
-      MONGO_HOST: 'mongo'
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
+      MONGO_HOST: 'mongodb'
     depends_on:
-      - mongo
+      - mongodb
 
 volumes:
   mongodb_data_container:
