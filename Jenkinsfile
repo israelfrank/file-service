@@ -188,7 +188,7 @@ pipeline {
           }
             sh "sed -i '29 i 2345678      ${env.space2}' ./common/templates/_deployment.yaml && sed -i 's;2345678;'';g' ./common/templates/_deployment.yaml"
             sh "sed -i '30 i 2345678        ${env.space1}' ./common/templates/_deployment.yaml && sed -i 's;2345678;'';g' ./common/templates/_deployment.yaml" 
-            sh "sed -i 's;{{ .Values.image.tag }};${env.BRANCH_TAG_NAME};g' ./common/templates/_deployment.yaml"
+            sh "sed -i 's;{{ .Values.image.tag }};${env.BRANCH_NAME};g' ./common/templates/_deployment.yaml"
             sh 'cat common/templates/_deployment.yaml'
           }
         }
