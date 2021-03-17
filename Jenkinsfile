@@ -131,7 +131,7 @@ pipeline {
             }
             else{
                configFileProvider([configFile(fileId:'abda1ce7-3925-4759-88a7-5163bdb44382',variable:'DEVELOP_CONFIG_FILE')]){
-                   sh ("kubectl apply -f ${env.DEVELOP_CONFIG_FILE}")  
+                   sh ("kubectl apply -f c${env.DEVELOP_CONFIG_FILE}")  
               }
             }
           }
@@ -161,7 +161,9 @@ pipeline {
           sh "sed -i 's;{{ .Values.image.tag }};develop;g' ./common/templates/_deployment.yaml"
           sh "sed -i 's;apps/v1beta2;apps/v1;g' ./common/templates/_deployment.yaml"
           sh "sed -i 's;apps/v1beta2;apps/v1;g' ./gotenberg/templates/deployment.yaml"
+          sh "sed -i 's;- path: /api/;- path: /api-gotenberg/;g' ./gotenberg/templates/ingress.yaml"
           sh 'cat common/templates/_deployment.yaml'
+          sh 'cat gotenberg/templates/ingress.yaml'
         }
       }
       post {
@@ -188,13 +190,13 @@ pipeline {
 
           if(env.BRANCH_NAME == 'master'){ 
              sh([script: """
-             (helm get drive-master && ./helm-dep-up-umbrella.sh ./helm-chart/ && helm upgrade drive-master ./helm-chart/ --namespace master --set global.ingress.hosts[0]=drive-master.northeurope.cloudapp.azure.com) ||
+             (helm get drive-master && ./helm-dep-up-umbrella.sh ./helm-chart/ && helm upgrade drive-master ./helm-chart/ --namespace master --set global.ingress.hosts[0]=drive-master.northeurope.cloudapp.azure.com --recreate-pods) ||
              (./helm-dep-up-umbrella.sh ./helm-chart/ && helm install ./helm-chart/ --name drive-master --namespace master --set global.ingress.hosts[0]=drive-master.northeurope.cloudapp.azure.com)
             """])
           }
           else {
              sh([script: """
-             (helm get drive-develop && ./helm-dep-up-umbrella.sh ./helm-chart/ && helm upgrade drive-develop ./helm-chart/ --namespace develop --set global.ingress.hosts[0]=drive-develop.northeurope.cloudapp.azure.com) ||
+             (helm get drive-develop && ./helm-dep-up-umbrella.sh ./helm-chart/ && helm upgrade drive-develop ./helm-chart/ --namespace develop --set global.ingress.hosts[0]=drive-develop.northeurope.cloudapp.azure.com --recreate-pods) ||
              (./helm-dep-up-umbrella.sh ./helm-chart/ && helm install ./helm-chart/ --name drive-develop --namespace develop --set global.ingress.hosts[0]=drive-develop.northeurope.cloudapp.azure.com)
             """])
           }
@@ -242,54 +244,60 @@ pipeline {
 
 
       // runing end to end aoutomation testing and publish test results 
-      // stage('aoutomation testing'){
-      //     when {
-      //       anyOf {
-      //         branch 'master'; branch 'develop'
-      //       }
-      //     }
-      //     steps {
-      //       script{
-      //         sh "apk --no-cache add curl"
-      //         // env.APP = sh (script: "curl -o -I -L -s -w \"%{http_code}\" drive-${env.BRANCH_NAME}.northeurope.cloudapp.azure.com/", returnStdout: true).trim()
-      //         env.APP = sh (script: "curl -o -I -L -s -w \"%{http_code}\" drive-develop.northeurope.cloudapp.azure.com/", returnStdout: true).trim()
-      //         if("${env.APP}" == '200'){
-      //       try {
-      //           sh ("docker run --name drive-outomation -e url=drive-${env.BRANCH_NAME}.northeurope.cloudapp.azure.com/ qayesodot/drive-outomation")
+      stage('aoutomation testing'){
+          when {
+            anyOf {
+              branch 'master'; branch 'develop'
+            }
+          }
+          steps {
+            script{
+              sh "apk --no-cache add curl"
+              env.APP = sh (script: "curl -o -I -L -s -w \"%{http_code}\" drive-${env.BRANCH_NAME}.northeurope.cloudapp.azure.com/", returnStdout: true).trim()
+              // env.APP = sh (script: "curl -o -I -L -s -w \"%{http_code}\" drive-develop.northeurope.cloudapp.azure.com/", returnStdout: true).trim()
+              if("${env.APP}" == '200'){
+            try {
+                sh ("docker run --name drive-outomation -e url=drive-${env.BRANCH_NAME}.northeurope.cloudapp.azure.com/ qayesodot/drive-outomation")
 
-      //           env.CONTAINER_ID = sh (script: "docker ps -a -q --filter name=drive-outomation", returnStdout: true).trim()
-      //           sh ("docker cp ${env.CONTAINER_ID}:/app/reports/reports.html ./")
-      //           sh("cat ./reports.html")
+                env.CONTAINER_ID = sh (script: "docker ps -a -q --filter name=drive-outomation", returnStdout: true).trim()
+                sh ("docker cp ${env.CONTAINER_ID}:/app/reports/reports.html ./")
+                sh("cat ./reports.html")
 
-      //           publishHTML target: [
-      //           allowMissing: false,
-      //           alwaysLinkToLastBuild: false,
-      //           keepAll: true,
-      //           reportDir: "./",
-      //           reportFiles: 'reports.html',
-      //           reportName: 'aoutomation test report'
-      //           ]          
-      //         }
-      //         catch(all){
-      //           env.CONTAINER_ID = sh (script: "docker ps -a -q --filter name=drive-outomation", returnStdout: true).trim()
-      //           sh ("docker cp ${env.CONTAINER_ID}:/app/reports/reports.html ./")
-      //           sh("cat ./reports.html")
+                publishHTML target: [
+                allowMissing: false,
+                alwaysLinkToLastBuild: false,
+                keepAll: true,
+                reportDir: "./",
+                reportFiles: 'reports.html',
+                reportName: 'aoutomation test report'
+                ]          
+              }
+              catch(all){
+                env.CONTAINER_ID = sh (script: "docker ps -a -q --filter name=drive-outomation", returnStdout: true).trim()
+                sh ("docker cp ${env.CONTAINER_ID}:/app/reports/reports.html ./")
+                sh("cat ./reports.html")
 
-      //           publishHTML target: [
-      //           allowMissing: false,
-      //           alwaysLinkToLastBuild: false,
-      //           keepAll: true,
-      //           reportDir: "./",
-      //           reportFiles: 'reports.html',
-      //           reportName: 'aoutomation test report'
-      //           ]          
-      //         }
-      //       }
-      //       else{
-      //           sh ("echo drive-${env.BRANCH_NAME}.northeurope.cloudapp.azure.com/ not found")
-      //       }
-      //     }
-      //   }
-      // } 
-    }   
-}
+                publishHTML target: [
+                allowMissing: false,
+                alwaysLinkToLastBuild: false,
+                keepAll: true,
+                reportDir: "./",
+                reportFiles: 'reports.html',
+                reportName: 'aoutomation test report'
+                ]          
+              }
+            }
+            else{
+                sh ("echo drive-${env.BRANCH_NAME}.northeurope.cloudapp.azure.com/ not found")
+            }
+          }
+        }
+          post {
+          always {
+            discordSend description: '**updated service**: '+ env.GIT_REPO_NAME + '\n **Build**:' + " " + env.BUILD_NUMBER + '\n **Branch**:' + " " + env.GIT_BRANCH + '\n **Status**:' + " " +  currentBuild.result + '\n \n \n **Commit ID**:'+ " " + env.GIT_SHORT_COMMIT + '\n **commit massage**:' + " " + env.GIT_COMMIT_MSG + '\n **commit email**:' + " " + env.GIT_COMMITTER_EMAIL, footer: '', image: '', link: 'http://jnk-devops-ci-cd.northeurope.cloudapp.azure.com/blue/organizations/jenkins/'+env.JOB_FOR_URL+'/detail/'+env.BRANCH_FOR_URL+'/'+env.BUILD_NUMBER+'/artifacts', result: currentBuild.result, thumbnail: '', title: ' link to logs of end to end testing', webhookURL: env.discord   
+            discordSend description: '**updated service**: '+ env.GIT_REPO_NAME + '\n **Build**:' + " " + env.BUILD_NUMBER + '\n **Branch**:' + " " + env.GIT_BRANCH + '\n **Status**:' + " " +  currentBuild.result + '\n \n \n **Commit ID**:'+ " " + env.GIT_SHORT_COMMIT + '\n **commit massage**:' + " " + env.GIT_COMMIT_MSG + '\n **commit email**:' + " " + env.GIT_COMMITTER_EMAIL, footer: '', image: '', link: 'http://jnk-devops-ci-cd.northeurope.cloudapp.azure.com/blue/organizations/jenkins/'+env.JOB_FOR_URL+'/detail/'+env.BRANCH_FOR_URL+'/'+env.BUILD_NUMBER+'/artifacts', result: currentBuild.result, thumbnail: '', title: ' link to logs of end to end testing', webhookURL: env.QA_DISCORD_CHANNEL   
+          }
+        }
+      }
+    } 
+  }
